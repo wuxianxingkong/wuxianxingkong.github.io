@@ -365,7 +365,8 @@
 <li>执行该计划<img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/execute_procedure.jpg" alt="execute_procedure" title="execute_procedure">
 </li>
 </ol>
-<p>SQL语句解析为语法树结构<br><img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/sql_example.jpg" alt="sql_example" title="sql_example"><br>解析为<br><img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/sql_tree.jpg" alt="sql_tree" title="sql_tree"></p>
+<p>SQL语句解析为语法树结构<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SELECT </span><br><span class="line">    p.Name,Total=SUM(inv.Quantity)</span><br><span class="line">FROM </span><br><span class="line">    Product AS p,</span><br><span class="line">    Inventory AS inv</span><br><span class="line">WHERE </span><br><span class="line">    inv.ProductID=p.ProductID</span><br><span class="line">    AND p.ame LIKE &apos;[A-G]%&apos;</span><br><span class="line">GROUP BY </span><br><span class="line">    p.Name</span><br></pre></td></tr></table></figure></p>
+<p>解析为<br><img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/sql_tree.jpg" alt="sql_tree" title="sql_tree"></p>
 <h3 id="Spark-SQL运行时架构"><a href="#Spark-SQL运行时架构" class="headerlink" title="Spark SQL运行时架构"></a>Spark SQL运行时架构</h3><p>采用和传统数据库类似的结构进行处理。我们通过SparkContext来分析处理过程。<br>首先说一下SQLContext的组成：</p>
 <ul>
 <li>Catalog：字典表，是ConcurrentHashMap[表明, LogicalPlan]的结构，注册表，注销表，查询表和逻辑计划关系的类<br>DDLParser：用于解析DDL语句，比如创建表的操作（含有parseQuery函数参数，传入的是SparkSQLParser：代理SqlParser，处理一些SQL中的通用关键字） </li>
