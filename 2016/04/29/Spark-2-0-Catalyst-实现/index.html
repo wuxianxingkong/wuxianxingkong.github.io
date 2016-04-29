@@ -80,38 +80,34 @@
 
 
 
-<meta name="description" content="本文将分为两部分来分析Spark SQL：
+<meta name="description" content="针对于Catalyst中的Parser，与1.6.1区别1.6.1版本中，有三个Parser，分析见之前的Spark SQL Catalyst分析
 
-总体设计
-组件分析
+DDLParser 
+SparkSQLParser 
+SqlParser 
 
-首先介绍下Spark SQL Catalyst总体设计
-总体设计我们通过一个SQL语句来分析比较传统数据库与Catalyst（参考《深入理解Spark》 作者 耿嘉安）SQL：1SELECT name FROM people WHERE age&amp;gt;=13 AND age&amp;lt;=19">
+2.0.0版本中，只保留了一个Parser。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spark SQL Source Analysis(1.6.1)">
-<meta property="og:url" content="http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/index.html">
+<meta property="og:title" content="Spark 2.0 Catalyst 实现">
+<meta property="og:url" content="http://yoursite.com/2016/04/29/Spark-2-0-Catalyst-实现/index.html">
 <meta property="og:site_name" content="CuiGuangfan's Blog">
-<meta property="og:description" content="本文将分为两部分来分析Spark SQL：
+<meta property="og:description" content="针对于Catalyst中的Parser，与1.6.1区别1.6.1版本中，有三个Parser，分析见之前的Spark SQL Catalyst分析
 
-总体设计
-组件分析
+DDLParser 
+SparkSQLParser 
+SqlParser 
 
-首先介绍下Spark SQL Catalyst总体设计
-总体设计我们通过一个SQL语句来分析比较传统数据库与Catalyst（参考《深入理解Spark》 作者 耿嘉安）SQL：1SELECT name FROM people WHERE age&amp;gt;=13 AND age&amp;lt;=19">
-<meta property="og:image" content="http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/semantics_describe.jpg">
-<meta property="og:image" content="http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/execute_procedure.jpg">
-<meta property="og:image" content="http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/sql_tree.jpg">
-<meta property="og:updated_time" content="2016-04-29T11:00:00.000Z">
+2.0.0版本中，只保留了一个Parser。">
+<meta property="og:updated_time" content="2016-04-29T13:30:00.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spark SQL Source Analysis(1.6.1)">
-<meta name="twitter:description" content="本文将分为两部分来分析Spark SQL：
+<meta name="twitter:title" content="Spark 2.0 Catalyst 实现">
+<meta name="twitter:description" content="针对于Catalyst中的Parser，与1.6.1区别1.6.1版本中，有三个Parser，分析见之前的Spark SQL Catalyst分析
 
-总体设计
-组件分析
+DDLParser 
+SparkSQLParser 
+SqlParser 
 
-首先介绍下Spark SQL Catalyst总体设计
-总体设计我们通过一个SQL语句来分析比较传统数据库与Catalyst（参考《深入理解Spark》 作者 耿嘉安）SQL：1SELECT name FROM people WHERE age&amp;gt;=13 AND age&amp;lt;=19">
-<meta name="twitter:image" content="http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/semantics_describe.jpg">
+2.0.0版本中，只保留了一个Parser。">
 
 
 
@@ -129,7 +125,7 @@
   };
 </script>
 
-  <title> Spark SQL Source Analysis(1.6.1) | CuiGuangfan's Blog </title>
+  <title> Spark 2.0 Catalyst 实现 | CuiGuangfan's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="en">
@@ -289,7 +285,7 @@
             
             
               
-                Spark SQL Source Analysis(1.6.1)
+                Spark 2.0 Catalyst 实现
               
             
           </h1>
@@ -301,7 +297,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-04-29T16:43:22+08:00" content="2016-04-29">
+            <time itemprop="dateCreated" datetime="2016-04-29T21:37:13+08:00" content="2016-04-29">
               2016-04-29
             </time>
           </span>
@@ -331,8 +327,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/29/Spark-SQL-Source-Analysis-1-6-1/" itemprop="commentsCount"></span>
+                <a href="/2016/04/29/Spark-2-0-Catalyst-实现/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/29/Spark-2-0-Catalyst-实现/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -360,84 +356,19 @@
       
 
       
-        <p>本文将分为两部分来分析Spark SQL：</p>
+        <h2 id="针对于Catalyst中的Parser，与1-6-1区别"><a href="#针对于Catalyst中的Parser，与1-6-1区别" class="headerlink" title="针对于Catalyst中的Parser，与1.6.1区别"></a>针对于Catalyst中的Parser，与1.6.1区别</h2><p>1.6.1版本中，有三个Parser，分析见之前的<a href="http://www.allofyou.cn/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/" title="Spark SQL Catalyst分析" target="_blank" rel="external">Spark SQL Catalyst分析</a></p>
 <ul>
-<li>总体设计</li>
-<li>组件分析</li>
+<li>DDLParser </li>
+<li>SparkSQLParser </li>
+<li>SqlParser </li>
 </ul>
-<p>首先介绍下Spark SQL Catalyst总体设计</p>
-<h2 id="总体设计"><a href="#总体设计" class="headerlink" title="总体设计"></a>总体设计</h2><p>我们通过一个SQL语句来分析比较传统数据库与Catalyst（参考《深入理解Spark》 作者 耿嘉安）<br>SQL：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT name FROM people WHERE age&gt;=13 AND age&lt;=19</span><br></pre></td></tr></table></figure></p>
-<a id="more"></a> 
-<p>这条语句分为三个部分：</p>
+<p>2.0.0版本中，只保留了一个Parser。<br><a id="more"></a><br>Spark1.6以及之前版本的实现方式：</p>
 <ul>
-<li>Projection(name)</li>
-<li>Data Source(people)</li>
-<li>Filter(age&gt;=13 AND age&lt;=19)<br>对应于SQL查询过程中的：</li>
-<li>Result</li>
-<li>Data Source</li>
-<li>Operation<br>如图所示：<img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/semantics_describe.jpg" alt="semantics_describe" title="semantics_describe">
-</li>
+<li>Scala解析器库、基于Hive的解析器 </li>
+<li>Spark2.0版本：使用ANTLR 4实现，参考博客链接：<a href="http://blog.csdn.net/dc_726/article/details/45399371" title="Antlr v4入门教程和实例" target="_blank" rel="external">Antlr v4入门教程和实例</a></li>
 </ul>
-<p>那么，这条语句是怎样翻译执行的呢？</p>
-<h3 id="通用SQL执行过程"><a href="#通用SQL执行过程" class="headerlink" title="通用SQL执行过程"></a>通用SQL执行过程</h3><ol>
-<li>SQL语句进行解析（Query-&gt;Parse），找出关键词（SELECT,FROM,WHERE），表达式，Projection（column1,column2…），Data Source（table1）</li>
-<li>校验规范</li>
-<li>将SQL语句和数据库的数据字典（表、视图等）进行绑定（Bind）</li>
-<li>从多个最优计划中选择一个最优计划（Optimize）</li>
-<li>执行该计划<img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/execute_procedure.jpg" alt="execute_procedure" title="execute_procedure">
-</li>
-</ol>
-<p>SQL语句解析为语法树结构<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SELECT </span><br><span class="line">    p.Name,Total=SUM(inv.Quantity)</span><br><span class="line">FROM </span><br><span class="line">    Product AS p,</span><br><span class="line">    Inventory AS inv</span><br><span class="line">WHERE </span><br><span class="line">    inv.ProductID=p.ProductID</span><br><span class="line">    AND p.ame LIKE &apos;[A-G]%&apos;</span><br><span class="line">GROUP BY </span><br><span class="line">    p.Name</span><br></pre></td></tr></table></figure></p>
-<p>解析为<br><img src="/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/sql_tree.jpg" alt="sql_tree" title="sql_tree"></p>
-<h3 id="Spark-SQL运行时架构"><a href="#Spark-SQL运行时架构" class="headerlink" title="Spark SQL运行时架构"></a>Spark SQL运行时架构</h3><p>采用和传统数据库类似的结构进行处理。我们通过SparkContext来分析处理过程。<br>首先说一下SQLContext的组成：</p>
-<ul>
-<li>Catalog：字典表，是ConcurrentHashMap[表明, LogicalPlan]的结构，注册表，注销表，查询表和逻辑计划关系的类<br>DDLParser：用于解析DDL语句，比如创建表的操作（含有parseQuery函数参数，传入的是SparkSQLParser：代理SqlParser，处理一些SQL中的通用关键字） </li>
-<li>SqlParser：用于解析select等查询语句 </li>
-<li>Analyzer：用于对未分析的Logical Plan进行分析 （Logical Plan其实就是语法树结构）</li>
-<li>Optimizer：用于对已经分析的Logical Plan进行优化 </li>
-<li>Logical Plan：由catalyst的TreeNode组成，有3种：UnaryNode、BinaryNode、LeafNode </li>
-<li>SparkPlanner：用于将Optimized Logical Plan转换为Physical Plan </li>
-<li>prepareForExecution：将Physical Plan转换为可执行的Physical Plan</li>
-</ul>
-<p>执行过程分析：</p>
-<ol>
-<li>SQL语句首先经过DDLParser，如果通过，则为DDL，否则，调用传入的函数参数即SparkSQLParser（SqlParser）进行处理 </li>
-<li>SQL语句经过SparkSQLParser（SqlParser）解析成Unresolved Logical Plan，调用sqlContext.executePlan(Logical Pan)，即使用sparkexecution.QueryExecution类来进行以下所有步骤的操作 </li>
-<li>使用analyzer结合catalog进行绑定，生成Resolved Logical Plan </li>
-<li>使用optimizer对resolved Logical Plan进行优化，生成optimized Logical Plan </li>
-<li>使用SparkPlanner将Logical Plan转换成PhysicalPlan </li>
-<li>使用prepareForExecution将Physical Plan转换为可执行的Physical Plan </li>
-<li>使用sqlContext.prepareForExecution.execute(sparkPlan)，生成executedPlan（prepared plan）（Shuffle操作和列格式转换） </li>
-<li>executedPlan.execute()得到RDD[InternalRow]即DataFrame</li>
-</ol>
-<h2 id="组件分析"><a href="#组件分析" class="headerlink" title="组件分析"></a>组件分析</h2><p>了解了Spark SQL的执行过程，我们来简要分析一下Spark SQL Catalyst中的重要组件</p>
-<ul>
-<li>Parser</li>
-<li>Analyzer</li>
-<li>Optimizer</li>
-</ul>
-<h3 id="Parser"><a href="#Parser" class="headerlink" title="Parser"></a>Parser</h3><p>词法解析发生在任务提交之前，在Parser阶段，SQL解析类有：</p>
-<ul>
-<li>DDLParser：临时表创建解析器，用来解析创建临时表的DDL语句 </li>
-<li>SQLParser：SQL语句解析器，解析SELECT、INSERT、ORDERING、PROJECTION等SQL语句 </li>
-<li>SparkSQLParser：用于代理SqlParser，对AS、CACHE、SET、LAZY、TABLE、UNCACHE等关键字进行处理</li>
-</ul>
-<h3 id="Analyzer"><a href="#Analyzer" class="headerlink" title="Analyzer"></a>Analyzer</h3><p>源码分析：</p>
-<ul>
-<li>Analyzer将Unresolved LogicalPlan与数据字典（Catalog）进行绑定，生成Resolved LogicalPaln </li>
-<li>Optimizer对Resolved Logical Plan进行优化，生成Optimized Logical Plan </li>
-<li>QueryExection通过懒执行的方式使用Analyzer、Optimizer、SparkPlanner、prepareForExecution </li>
-<li>execute()方法产生RDD，即该方法最终引发了Analyzer、Optimizer将一系列Rule应用到Logical Plan<br>Analyzer其实就是将Parser生成的语法树结构结合Catalog使用一系列Rule进行丰富，这里简单说一下Rule和RuleExecutor</li>
-<li>Analyzer与Optimizer的分析与优化操作就是一系列的Rule，RuleExecutor用于执行Rule </li>
-<li>RuleExecutor中的一些概念：Strategy（执行策略，执行Rule的最大次数），Once（只执行一次的Rule策略），FixedPoint（达到FixedPoint指定次数或前后两次树结构没变化时停止操作的策略），Batch（一批Rule及其执行策略）</li>
-</ul>
-<h3 id="Spark-Planner"><a href="#Spark-Planner" class="headerlink" title="Spark Planner"></a>Spark Planner</h3><p>Spark Planner与Spark Plan</p>
-<ul>
-<li>Spark Planner对Logical Plan应用每一个Strategy（Seq[SparkPlan]的具体实现），比如BasicOperators，对匹配到的每个SQL关键字进行处理，并使用planLater对子树进行迭代处理，最后生成Iterator[PhysicalPlan]（或者说Iterator[SparkPlan]） </li>
-<li>Strategy中包含了如何将Logical Plan转换为RDD[InternalRow]的方法（doExecute方法）</li>
-</ul>
-<p>原创文章，转载请注明：<br>转载自：<a href="http://www.allofyou.cn/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/" title="Spark SQL Source Analysis" target="_blank" rel="external">CuiGuangfan’s Blog</a>，作者： <a href="http://www.allofyou.cn/about" title="About me" target="_blank" rel="external">崔光范</a></p>
-<p>本文链接地址：<a href="http://www.allofyou.cn/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/" target="_blank" rel="external">http://www.allofyou.cn/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/</a></p>
+<p>原创文章，转载请注明：<br>转载自：<a href="http://www.allofyou.cn/2016/04/29/Spark-2-0-Catalyst-实现/" title="Spark 2.0 Catalyst 实现" target="_blank" rel="external">CuiGuangfan’s Blog</a>，作者： <a href="http://www.allofyou.cn/about" title="About me" target="_blank" rel="external">崔光范</a></p>
+<p>本文链接地址：<a href="http://www.allofyou.cn/2016/04/29/Spark-2-0-Catalyst-实现/" target="_blank" rel="external">http://www.allofyou.cn/2016/04/29/Spark-2-0-Catalyst-实现/</a></p>
 <p>注：本文基于署名-非商业性使用-禁止演绎，欢迎转载、转发和评论，但是请保留本文作者署名和文章链接。如若需要用于商业目的或者与授权方面的协商，请联系我。</p>
 
       
@@ -489,13 +420,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2016/04/29/Catalyst-Parser-source-analysis-report/" rel="next" title="Catalyst Parser source analysis report">
+                <i class="fa fa-chevron-left"></i> Catalyst Parser source analysis report
+              </a>
+            
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/04/29/Catalyst-Parser-source-analysis-report/" rel="prev" title="Catalyst Parser source analysis report">
-                Catalyst Parser source analysis report <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -544,8 +475,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/29/Spark-SQL-Source-Analysis-1-6-1/"
-           data-title="Spark SQL Source Analysis(1.6.1)" data-url="http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/">
+      <div class="ds-thread" data-thread-key="2016/04/29/Spark-2-0-Catalyst-实现/"
+           data-title="Spark 2.0 Catalyst 实现" data-url="http://yoursite.com/2016/04/29/Spark-2-0-Catalyst-实现/">
       </div>
     
   </div>
@@ -647,7 +578,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#总体设计"><span class="nav-number">1.</span> <span class="nav-text">总体设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#通用SQL执行过程"><span class="nav-number">1.1.</span> <span class="nav-text">通用SQL执行过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spark-SQL运行时架构"><span class="nav-number">1.2.</span> <span class="nav-text">Spark SQL运行时架构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#组件分析"><span class="nav-number">2.</span> <span class="nav-text">组件分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Parser"><span class="nav-number">2.1.</span> <span class="nav-text">Parser</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Analyzer"><span class="nav-number">2.2.</span> <span class="nav-text">Analyzer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spark-Planner"><span class="nav-number">2.3.</span> <span class="nav-text">Spark Planner</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#针对于Catalyst中的Parser，与1-6-1区别"><span class="nav-number">1.</span> <span class="nav-text">针对于Catalyst中的Parser，与1.6.1区别</span></a></li></ol></div>
             
           </div>
         </section>
