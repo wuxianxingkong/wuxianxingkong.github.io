@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+
+    
+    
+    
+    
+  <url>
+    <loc>http://yoursite.com/2016/04/29/Spark-2-0-Catalyst-%E5%AE%9E%E7%8E%B0/</loc>
+    <lastmod>2016-04-29T13:30:00.000Z</lastmod>
+    <data>
+        <display>
+        <title>Spark 2.0 Catalyst 实现</title>
+        <pubTime>2016-04-29T13:37:13.000Z</pubTime>
+        
+        <tag>Spark SQL</tag>
+         
+         
+           
+             
+              <breadCrumb title="Spark SQL" url="http://yoursite.com/categories/Spark-SQL/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2016/04/29/Catalyst-Parser-source-analysis-report/</loc>
+    <lastmod>2016-04-29T11:00:00.000Z</lastmod>
+    <data>
+        <display>
+        <title>Catalyst Parser source analysis report</title>
+        <pubTime>2016-04-29T09:50:07.000Z</pubTime>
+        
+        <tag>Spark SQL</tag>
+         
+         
+           
+             
+              <breadCrumb title="Spark SQL" url="http://yoursite.com/categories/Spark-SQL/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2016/04/29/Spark-SQL-Source-Analysis-1-6-1/</loc>
+    <lastmod>2016-04-29T11:00:00.000Z</lastmod>
+    <data>
+        <display>
+        <title>Spark SQL Source Analysis(1.6.1)</title>
+        <pubTime>2016-04-29T08:43:22.000Z</pubTime>
+        
+        <tag>Spark SQL</tag>
+         
+         
+           
+             
+              <breadCrumb title="Spark SQL" url="http://yoursite.com/categories/Spark-SQL/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+    
+</urlset>
